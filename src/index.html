@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pogodynka</title>
+
+  <style>
+    :root {
+      --bg: #1e1e2e;
+      --panel: #313244;
+      --surface: #181825;
+      --text: #cdd6f4;
+      --muted: #a6adc8;
+      --pink: #f38ba8;
+      --green: #a6e3a1;
+      --blue: #89b4fa;
+      --yellow: #f9e2af;
+      --lavender: #cba6f7;
+      --teal: #94e2d5;
+      --border: #45475a;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 40px 20px;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    header {
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 5vw, 42px);
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .card {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: var(--panel);
+      box-shadow: 0 16px 45px #11111b55;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: var(--pink);
+    }
+
+    .dot.online {
+      background: var(--green);
+      box-shadow: 0 0 10px #a6e3a155;
+    }
+
+    .content {
+      padding: 22px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .metric {
+      position: relative;
+      min-width: 0;
+      overflow: hidden;
+      padding: 20px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--surface);
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .metric:hover {
+      border-color: var(--metric-color);
+      transform: translateY(-2px);
+    }
+
+    .metric:active {
+      transform: scale(0.98);
+    }
+
+    .metric.copied {
+      border-color: var(--green);
+      box-shadow: 0 0 12px #a6e3a122;
+    }
+
+    .metric.wide {
+      grid-column: 1 / -1;
+    }
+
+    .metric-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .metric-icon {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      flex-shrink: 0;
+      border-radius: 12px;
+      background: color-mix(
+        in srgb,
+        var(--metric-color) 14%,
+        transparent
+      );
+      color: var(--metric-color);
+      font-size: 22px;
+    }
+
+    .metric-value {
+      display: flex;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 6px;
+      font-size: clamp(27px, 5vw, 36px);
+      font-weight: bold;
+      letter-spacing: -1px;
+      overflow-wrap: anywhere;
+    }
+
+    .metric-unit {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: normal;
+      letter-spacing: 0;
+    }
+
+    .temperature { --metric-color: var(--pink); }
+    .pressure    { --metric-color: var(--blue); }
+    .humidity    { --metric-color: var(--teal); }
+    .air         { --metric-color: var(--yellow); }
+    .time        { --metric-color: var(--lavender); }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .accent {
+      color: var(--lavender);
+    }
+
+    .error {
+      display: none;
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: #f38ba81a;
+      color: var(--pink);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    @media (min-width: 650px) {
+      .grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .metric.wide {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 420px) {
+      body {
+        padding: 24px 12px;
+      }
+
+      .content {
+        padding: 12px;
+      }
+
+      .grid {
+        gap: 10px;
+      }
+
+      .metric {
+        padding: 14px;
+      }
+
+      .metric-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 19px;
+      }
+
+      .card-header {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <header>
+      <h1>
+        <span style="color: var(--pink)">Pogodynka</span>
+      </h1>
+    </header>
+
+    <section class="card">
+      <div class="card-header">
+        <div class="card-title">Aktualne pomiary</div>
+
+        <div class="status">
+          <span class="dot" id="dot"></span>
+          <span id="status">Łączenie...</span>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="grid">
+
+          <div class="metric temperature" data-copy="temperature">
+            <div class="metric-top">
+              <span class="metric-label">Temperatura</span>
+              <span class="metric-icon">🌡</span>
+            </div>
+
+            <div class="metric-value">
+              <span id="temperature">--</span>
+              <span class="metric-unit">°C</span>
+            </div>
+          </div>
+
+          <div class="metric pressure" data-copy="pressure">
+            <div class="metric-top">
+              <span class="metric-label">Ciśnienie</span>
+              <span class="metric-icon">◉</span>
+            </div>
+
+            <div class="metric-value">
+              <span id="pressure">--</span>
+              <span class="metric-unit">hPa</span>
+            </div>
+          </div>
+
+          <div class="metric humidity" data-copy="humidity">
+            <div class="metric-top">
+              <span class="metric-label">Wilgotność</span>
+              <span class="metric-icon">💧</span>
+            </div>
+
+            <div class="metric-value">
+              <span id="humidity">--</span>
+              <span class="metric-unit">%</span>
+            </div>
+          </div>
+
+          <div class="metric air" data-copy="air_quality">
+            <div class="metric-top">
+              <span class="metric-label">Jakość powietrza</span>
+              <span class="metric-icon">≋</span>
+            </div>
+
+            <div class="metric-value">
+              <span id="air_quality">--</span>
+            </div>
+          </div>
+
+          <div class="metric time wide" data-copy="time">
+            <div class="metric-top">
+              <span class="metric-label">Czas pomiaru</span>
+              <span class="metric-icon">◷</span>
+            </div>
+
+            <div class="metric-value">
+              <span id="time">--</span>
+              <span class="metric-unit">ms</span>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="footer">
+          <span id="updated">Oczekiwanie na dane...</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const status = document.getElementById("status");
+    const dot = document.getElementById("dot");
+    const updated = document.getElementById("updated");
+    const errorBox = document.getElementById("error");
+
+    let latestData = null;
+    const copyTimers = new WeakMap();
+
+    function displayValue(id, value, digits = 2) {
+      const element = document.getElementById(id);
+
+      if (value === null || value === undefined || value === "") {
+        element.textContent = "--";
+        return;
+      }
+
+      const number = Number(value);
+
+      element.textContent = Number.isFinite(number)
+        ? (id === "time" ? String(number) : number.toFixed(digits))
+        : String(value);
+    }
+
+    async function copyText(value) {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+        return;
+      }
+
+      const textarea = document.createElement("textarea");
+      textarea.value = value;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.top = "0";
+      textarea.style.left = "-9999px";
+
+      document.body.appendChild(textarea);
+      textarea.select();
+      textarea.setSelectionRange(0, textarea.value.length);
+
+      document.execCommand("copy");
+      textarea.remove();
+    }
+
+    document.querySelectorAll("[data-copy]").forEach((card) => {
+      card.addEventListener("click", async () => {
+        if (!latestData) {
+          return;
+        }
+
+        const key = card.dataset.copy;
+        const dataKey = key === "time" ? "time_millis" : key;
+        const value = latestData[dataKey];
+
+        if (value === null || value === undefined || value === "") {
+          return;
+        }
+
+        try {
+          await copyText(String(value));
+          card.classList.add("copied");
+          clearTimeout(copyTimers.get(card));
+          const timer = setTimeout(() => {
+            card.classList.remove("copied");
+          }, 700);
+
+          copyTimers.set(card, timer);
+        } catch (_e) {
+        }
+      });
+    });
+
+    async function refresh() {
+      try {
+        const response = await fetch("/measurement", { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        latestData = data;
+
+        displayValue("temperature", data.temperature);
+        displayValue("pressure", data.pressure);
+        displayValue("humidity", data.humidity);
+        displayValue("air_quality", data.air_quality);
+        displayValue("time", data.time_millis, 0);
+
+        status.textContent = "Połączono";
+        dot.classList.add("online");
+        errorBox.style.display = "none";
+        updated.textContent = "Ostatnia aktualizacja: " + new Date().toLocaleTimeString("pl-PL");
+      } catch (error) {
+        status.textContent = "Brak połączenia";
+        dot.classList.remove("online");
+        errorBox.textContent = "Nie udało się pobrać pomiarów: " + error.message;
+        errorBox.style.display = "block";
+        updated.textContent = "Błąd: " + new Date().toLocaleTimeString("pl-PL");
+      }
+    }
+
+    refresh();
+    setInterval(refresh, 1000);
+  </script>
+</body>
+</html>
